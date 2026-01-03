@@ -4,21 +4,19 @@ Czech Technical University, Prague, Czechia
 Released under Apache 2.0 license as described in the file LICENSE.
 -/
 
+import Problems.NavierStokes.Imports
+import Problems.NavierStokes.Definitions
+import Problems.NavierStokes.Navierstokes
+import Problems.NavierStokes.MillenniumRDomain
+
 /-
 This is the end-to-end Lean solution of the Navier-Stokes problem as formalized
 by LeanMillenniumPrizeProblems.
 It is based on the informal solution of the millennium problem provided
 by Tomáš Skřivan.
 
-To test it, clone the repository
-https://github.com/lean-dojo/LeanMillenniumPrizeProblems/tree/main
-and copy this file to the directory `Problems/NavierStokes`
+Needless to say, this does not solve the real problem.
 -/
-
-import Problems.NavierStokes.Imports
-import Problems.NavierStokes.Definitions
-import Problems.NavierStokes.Navierstokes
-import Problems.NavierStokes.MillenniumRDomain
 
 namespace MillenniumNSRDomain
 open EuclideanSpace MeasureTheory Order NavierStokes
@@ -26,15 +24,10 @@ open EuclideanSpace MeasureTheory Order NavierStokes
 -- We show that a problem exists
 instance : Inhabited MillenniumProblem where
   default := {
-    initialVelocity := fun _ ↦ 0
-    initialVelocity_smooth := by apply contDiff_const
+    initialVelocity := 0
+    initialVelocity_smooth := contDiff_const
     initialVelocity_finite_energy := by simp
-    initialVelocity_div_free := by
-      intro x
-      simp
-      apply Finset.sum_eq_zero
-      intro i i_univ
-      apply partialDeriv_const
+    initialVelocity_div_free x := by simp [partialDeriv_const]
     nu := 1
     nu_pos := by norm_num
     f := fun _ ↦ 0
@@ -42,28 +35,24 @@ instance : Inhabited MillenniumProblem where
 
 -- First branch, ExistenceOfSmoothSolution
 
--- Short proof by Yaël Dillies of a non-existence of a smooth solution
 theorem no_smooth_solution (problem : MillenniumProblem) :
-    ¬ ExistenceOfSmoothSolution problem := by rintro ⟨sol, ⟨⟩⟩
+    ¬ ExistenceOfSmoothSolution problem :=
+  nofun
 
 /-
 This shows that the first possibility does not occur. It is NOT the case that:
 * For ALL valid initial conditions (smooth, divergence-free, finite energy),
   smooth solutions exist for all time (global existence)
 -/
-theorem branch1_eq_False :
-    (∀ problem : MillenniumProblem, ExistenceOfSmoothSolution problem) = False := by
-  simp
-  use default
-  apply no_smooth_solution
+theorem not_branch1 :
+    ¬ (∀ problem : MillenniumProblem, ExistenceOfSmoothSolution problem) :=
+  (no_smooth_solution _ <| · default)
 
 -- Second branch, BreakdownOfSmoothSolution,
 theorem no_breakdown (problem : MillenniumProblem) :
     ¬ BreakdownOfSmoothSolution problem := by
-  unfold BreakdownOfSmoothSolution
-  push_neg
-  intro sol solh
-  use {
+  rintro ⟨sol, solh, h⟩
+  specialize h {
     sol with
     domain := ∅
     T := sol.T+1
@@ -73,18 +62,17 @@ theorem no_breakdown (problem : MillenniumProblem) :
     velocity_smooth := by simp
     pressure_smooth := by simp
   }
-  simp
+  dsimp at h
+  linarith
 
 /-
 This shows that the second possibility does not occur. It is NOT the case that:
 * there EXISTS at least one valid initial condition for which
   no smooth solution can exist beyond some finite time (finite-time blowup)
 -/
-theorem branch2_eq_False :
-    (∃ problem : MillenniumProblem, BreakdownOfSmoothSolution problem) = False := by
-  simp
-  intro x
-  apply no_breakdown
+theorem not_branch2 :
+    ¬(∃ problem : MillenniumProblem, BreakdownOfSmoothSolution problem) :=
+  fun ⟨_, breakdown⟩ => no_breakdown _ breakdown
 
 /-
 This shows that none of the options happen, so the full claim of Navier-Stokes
@@ -92,6 +80,10 @@ is decided as false.
 -/
 theorem million_dollar_proof : ¬ MillenniumProblemStatement := by
   unfold MillenniumProblemStatement
-  rw [branch1_eq_False, branch2_eq_False]
-  -- This simplifies to `False ∨ False`, which can be decided
-  decide
+  simp [not_branch1, not_branch2]
+
+/--
+info: 'MillenniumNSRDomain.million_dollar_proof' depends on axioms: [propext, Classical.choice, Quot.sound]
+-/
+#guard_msgs in
+#print axioms million_dollar_proof
