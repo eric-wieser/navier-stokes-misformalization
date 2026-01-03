@@ -35,7 +35,13 @@ instance : Inhabited MillenniumProblem where
     f := fun _ ↦ 0
   }
 
--- First branch, ExistenceOfSmoothSolution
+/-
+First branch, ExistenceOfSmoothSolution.
+
+This proof exploits the misformalization of `ExistenceOfSmoothSolution`,
+in particular the type of `sol.T : ℝ`. As such, it never happens that
+`↑sol.T = ⊤`
+-/
 
 theorem no_smooth_solution (problem : MillenniumProblem) :
     ¬ ExistenceOfSmoothSolution problem :=
@@ -50,7 +56,15 @@ theorem not_branch1 :
     ¬ (∀ problem : MillenniumProblem, ExistenceOfSmoothSolution problem) :=
   (no_smooth_solution _ <| · default)
 
--- Second branch, BreakdownOfSmoothSolution,
+/-
+Second branch, BreakdownOfSmoothSolution,
+
+This proof exploits the incorrectly used assignment inside a structure.
+While `Solution` attempts to set:
+`domain : Set (Euc ℝ (n+1)) := {x | 0 ≤ x 0 ∧ x 0 < T}`
+this is only a default value in the datastructure, not a required value.
+Hence we can build a trivial solution by setting `domain := ∅`.
+-/
 theorem no_breakdown (problem : MillenniumProblem) :
     ¬ BreakdownOfSmoothSolution problem := by
   rintro ⟨sol, solh, h⟩
@@ -79,6 +93,12 @@ theorem not_branch2 :
 /-
 This shows that none of the options happen, so the full claim of Navier-Stokes
 is decided as false.
+
+Note that even if both branches were formalized correctly, it doesn't make
+`MillenniumProblemStatement` a proper formalization, as it is stated as logical
+or. To solve a millenium problem, we should prove one option, or prove the other,
+it is not enough to prove that one of the options hold because an abstract proof
+doesn't have to specify which one.
 -/
 theorem million_dollar_proof : ¬ MillenniumProblemStatement := by
   unfold MillenniumProblemStatement
