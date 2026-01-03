@@ -1,0 +1,11 @@
+name = "navier-stokes-misformalization"
+version = "0.1.0"
+defaultTargets = ["NavierStokesMisformalization"]
+
+[[lean_lib]]
+name = "NavierStokesMisformalization"
+
+[[require]]
+name = "problems"
+branch = "main"
+git = "https://github.com/lean-dojo/LeanMillenniumPrizeProblems"
