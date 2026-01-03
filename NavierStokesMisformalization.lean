@@ -21,15 +21,17 @@ Needless to say, this does not solve the real problem.
 namespace MillenniumNSRDomain
 open EuclideanSpace MeasureTheory Order NavierStokes
 
+attribute [simp] partialDeriv_const
+
 -- We show that a problem exists
 instance : Inhabited MillenniumProblem where
   default := {
     initialVelocity := 0
     initialVelocity_smooth := contDiff_const
     initialVelocity_finite_energy := by simp
-    initialVelocity_div_free x := by simp [partialDeriv_const]
+    initialVelocity_div_free x := by simp
     nu := 1
-    nu_pos := by norm_num
+    nu_pos := by simp
     f := fun _ ↦ 0
   }
 
